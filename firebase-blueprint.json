@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the security assistant app",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "username", "email", "createdAt"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "A chat room (direct or group)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["direct", "group"] },
+        "name": { "type": "string", "description": "Group name, optional for direct chats" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastMessageTime": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "participants", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A message within a chat",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "chatId", "senderId", "senderName", "text", "timestamp"]
+    },
+    "Personnel": {
+      "title": "Personnel",
+      "description": "Security personnel or staff",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["yemekhane", "yurt"] },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "type", "createdAt"]
+    },
+    "Visitor": {
+      "title": "Visitor",
+      "description": "A visitor record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "tc": { "type": "string" },
+        "company": { "type": "string" },
+        "plate": { "type": "string" },
+        "material": { "type": "string" },
+        "fromPlace": { "type": "string" },
+        "gate": { "type": "string" },
+        "entryTime": { "type": "string", "format": "date-time" },
+        "exitTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "tc", "company", "entryTime"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A security note",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "createdAt"]
+    },
+    "Shift": {
+      "title": "Shift",
+      "description": "A shift record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "type": { "type": "string", "enum": ["gunduz", "gece", "tatil"] },
+        "notes": { "type": "string" }
+      },
+      "required": ["date", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles"
+    },
+    "/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/Chat" },
+      "description": "Stores chat rooms"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Stores messages within a chat room"
+    },
+    "/personnel/{personnelId}": {
+      "schema": { "$ref": "#/entities/Personnel" },
+      "description": "Stores personnel records"
+    },
+    "/visitors/{visitorId}": {
+      "schema": { "$ref": "#/entities/Visitor" },
+      "description": "Stores visitor records"
+    },
+    "/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/Note" },
+      "description": "Stores security notes"
+    },
+    "/shifts/{shiftId}": {
+      "schema": { "$ref": "#/entities/Shift" },
+      "description": "Stores shift records"
+    }
+  }
+}

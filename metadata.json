@@ -1,0 +1,5 @@
+{
+  "name": "Güvenlik Asistanı V2",
+  "description": "Güvenlik görevlileri için kapsamlı asistan uygulaması. Personel, ziyaretçi, radyo, hava durumu ve daha fazlası.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}
