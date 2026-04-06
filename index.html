@@ -1,17 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr" translate="no">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1e3a8a" />
+    <meta name="google" content="notranslate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#F2F2F7" />
     <link rel="apple-touch-icon" href="/pwa-192x192.svg">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Güvenlik Asistanı V2</title>
     <script>
       try {
         if (localStorage.getItem('darkMode') === 'true') {
           document.documentElement.classList.add('dark');
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000000');
         }
       } catch (e) {}
     </script>

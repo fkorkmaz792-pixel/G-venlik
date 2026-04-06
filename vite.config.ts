@@ -14,15 +14,33 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg'],
         workbox: {
-          maximumFileSizeToCacheInBytes: 5000000 // 5MB
+          maximumFileSizeToCacheInBytes: 5000000, // 5MB
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/ais-.*\.run\.app\/.*$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 // 1 day
+                }
+              }
+            }
+          ]
         },
         manifest: {
           name: 'Güvenlik Asistanı',
           short_name: 'Güvenlik',
           description: 'Güvenlik Operasyonları Yönetim Sistemi',
-          theme_color: '#1e3a8a',
-          background_color: '#ffffff',
-          display: 'standalone',
+          theme_color: '#F2F2F7',
+          background_color: '#F2F2F7',
+          display: 'fullscreen',
+          start_url: '/',
+          scope: '/',
           icons: [
             {
               src: 'pwa-192x192.svg',

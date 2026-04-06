@@ -1,64 +1,22 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
-      "description": "A user of the security assistant app",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "username": { "type": "string" },
-        "displayName": { "type": "string" },
-        "email": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["uid", "username", "email", "createdAt"]
-    },
-    "Chat": {
-      "title": "Chat",
-      "description": "A chat room (direct or group)",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "type": { "type": "string", "enum": ["direct", "group"] },
-        "name": { "type": "string", "description": "Group name, optional for direct chats" },
-        "participants": { "type": "array", "items": { "type": "string" } },
-        "lastMessage": { "type": "string" },
-        "lastMessageTime": { "type": "string", "format": "date-time" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "type", "participants", "createdAt"]
-    },
-    "Message": {
-      "title": "Message",
-      "description": "A message within a chat",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "chatId": { "type": "string" },
-        "senderId": { "type": "string" },
-        "senderName": { "type": "string" },
-        "text": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "chatId", "senderId", "senderName", "text", "timestamp"]
-    },
     "Personnel": {
       "title": "Personnel",
-      "description": "Security personnel or staff",
+      "description": "A staff member at the facility.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["yemekhane", "yurt"] },
         "phone": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "type": { "type": "string", "enum": ["yemekhane", "yurt"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string", "description": "The user ID of the owner" }
       },
-      "required": ["name", "type", "createdAt"]
+      "required": ["id", "name", "type", "createdAt", "uid"]
     },
     "Visitor": {
       "title": "Visitor",
-      "description": "A visitor record",
+      "description": "A visitor to the facility.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -68,66 +26,38 @@
         "plate": { "type": "string" },
         "material": { "type": "string" },
         "fromPlace": { "type": "string" },
-        "gate": { "type": "string" },
         "entryTime": { "type": "string", "format": "date-time" },
-        "exitTime": { "type": "string", "format": "date-time" }
+        "exitTime": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string", "description": "The user ID of the owner" }
       },
-      "required": ["name", "tc", "company", "entryTime"]
+      "required": ["id", "name", "entryTime", "uid"]
     },
-    "Note": {
-      "title": "Note",
-      "description": "A security note",
+    "City": {
+      "title": "City",
+      "description": "A city saved for weather tracking.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "color": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "name": { "type": "string" },
+        "lat": { "type": "number" },
+        "lon": { "type": "number" },
+        "uid": { "type": "string", "description": "The user ID of the owner" }
       },
-      "required": ["title", "content", "createdAt"]
-    },
-    "Shift": {
-      "title": "Shift",
-      "description": "A shift record",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "type": { "type": "string", "enum": ["gunduz", "gece", "tatil"] },
-        "notes": { "type": "string" }
-      },
-      "required": ["date", "type"]
+      "required": ["id", "name", "lat", "lon", "uid"]
     }
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "Stores user profiles"
-    },
-    "/chats/{chatId}": {
-      "schema": { "$ref": "#/entities/Chat" },
-      "description": "Stores chat rooms"
-    },
-    "/chats/{chatId}/messages/{messageId}": {
-      "schema": { "$ref": "#/entities/Message" },
-      "description": "Stores messages within a chat room"
-    },
-    "/personnel/{personnelId}": {
+    "/users/{userId}/personnel/{personnelId}": {
       "schema": { "$ref": "#/entities/Personnel" },
-      "description": "Stores personnel records"
+      "description": "Personnel list scoped to the user"
     },
-    "/visitors/{visitorId}": {
+    "/users/{userId}/visitors/{visitorId}": {
       "schema": { "$ref": "#/entities/Visitor" },
-      "description": "Stores visitor records"
+      "description": "Visitor list scoped to the user"
     },
-    "/notes/{noteId}": {
-      "schema": { "$ref": "#/entities/Note" },
-      "description": "Stores security notes"
-    },
-    "/shifts/{shiftId}": {
-      "schema": { "$ref": "#/entities/Shift" },
-      "description": "Stores shift records"
+    "/users/{userId}/cities/{cityId}": {
+      "schema": { "$ref": "#/entities/City" },
+      "description": "Saved cities scoped to the user"
     }
   }
 }

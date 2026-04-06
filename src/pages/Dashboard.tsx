@@ -1,529 +1,223 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Users, UserCheck, Radio, Cloud, Calendar, FileText, QrCode, 
-  Gamepad2, Settings, BarChart2, MessageSquare, Newspaper, 
-  Bell, Bot, Moon, Sun, ChevronRight, Clock, Sparkles, RefreshCw, ExternalLink
+  Users, UserCheck, Cloud, Settings, BarChart2, 
+  ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '../store';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const modules = [
-  { path: '/assistant', label: 'Yapay Zeka', icon: Bot, color: 'from-purple-500 to-indigo-600', shadow: 'shadow-purple-500/20' },
-  { path: '/news', label: 'Haberler', icon: Newspaper, color: 'from-red-500 to-rose-600', shadow: 'shadow-red-500/20' },
   { path: '/personnel', label: 'Personel', icon: Users, color: 'from-blue-500 to-cyan-600', shadow: 'shadow-blue-500/20' },
   { path: '/visitors', label: 'Ziyaretçiler', icon: UserCheck, color: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/20' },
-  { path: '/radio', label: 'Radyo', icon: Radio, color: 'from-violet-500 to-purple-600', shadow: 'shadow-violet-500/20' },
-  { path: '/weather', label: 'Hava Durumu', icon: Cloud, color: 'from-sky-400 to-blue-500', shadow: 'shadow-sky-500/20' },
-  { path: '/calendar', label: 'Vardiya', icon: Calendar, color: 'from-orange-500 to-amber-600', shadow: 'shadow-orange-500/20' },
-  { path: '/alarms', label: 'Alarmlar', icon: Bell, color: 'from-yellow-400 to-orange-500', shadow: 'shadow-yellow-500/20' },
-  { path: '/notes', label: 'Notlar', icon: FileText, color: 'from-amber-600 to-yellow-700', shadow: 'shadow-amber-600/20' },
-  { path: '/scanner', label: 'QR Tarayıcı', icon: QrCode, color: 'from-indigo-500 to-blue-600', shadow: 'shadow-indigo-500/20' },
-  { path: '/reports', label: 'Raporlar', icon: BarChart2, color: 'from-teal-500 to-emerald-600', shadow: 'shadow-teal-500/20' },
-  { path: '/chats', label: 'Sohbet', icon: MessageSquare, color: 'from-pink-500 to-rose-600', shadow: 'shadow-pink-500/20' },
-  { path: '/games', label: 'Oyunlar', icon: Gamepad2, color: 'from-rose-500 to-red-600', shadow: 'shadow-rose-500/20' },
-  { path: '/settings', label: 'Ayarlar', icon: Settings, color: 'from-slate-500 to-gray-600', shadow: 'shadow-slate-500/20' },
 ];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants: any = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  }
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { darkMode, toggleDarkMode } = useAppStore();
-  const [latestNews, setLatestNews] = useState<any[]>([]);
-  const [loadingNews, setLoadingNews] = useState(true);
+  const { darkMode, toggleDarkMode, personnel, visitors, cities, selectedCityId } = useAppStore();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [weather, setWeather] = useState<{temp: number, city: string} | null>(null);
+  const [currentLocationName, setCurrentLocationName] = useState('Güncel Konum');
 
   useEffect(() => {
-    let isMounted = true;
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    
-    const fetchNews = async () => {
-      if (isMounted) await fetchLatestNews();
-    };
-    
-    fetchNews();
-    
-    return () => {
-      isMounted = false;
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, []);
 
-  const fetchLatestNews = async () => {
-    setLoadingNews(true);
-    try {
-      const sources = [
-        { label: 'TRT Haber', url: 'https://www.trthaber.com/manset_articles.rss' },
-        { label: 'NTV', url: 'https://www.ntv.com.tr/gundem.rss' },
-        { label: 'Habertürk', url: 'https://www.haberturk.com/rss/manset.xml' },
-        { label: 'CNN Türk', url: 'https://www.cnnturk.com/feed/rss/all/news' },
-        { label: 'Hürriyet', url: 'https://www.hurriyet.com.tr/rss/anasayfa' },
-        { label: 'Anadolu Ajansı', url: 'https://www.aa.com.tr/tr/rss/default?cat=guncel' },
-        { label: 'Sözcü', url: 'https://www.sozcu.com.tr/feeds-son-dakika' },
-        { label: 'Sabah', url: 'https://www.sabah.com.tr/rss/anasayfa.xml' }
-      ];
-
-      for (const source of sources) {
-        try {
-          console.log(`Trying news source: ${source.label}`);
-          // Try RSS2JSON
-          const rssUrl = encodeURIComponent(source.url);
-          const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=3`);
-          const data = await response.json();
-          
-          if (data.status === 'ok' && data.items && data.items.length > 0) {
-            const validItems = data.items.filter((item: any) => item && (item.title || item.description));
-            if (validItems.length > 0) {
-              setLatestNews(validItems.slice(0, 3).map((item: any) => ({ ...item, sourceLabel: source.label })));
-              setLoadingNews(false);
-              return;
-            }
-          }
-
-          // Small delay before fallback
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Try FactMaven fallback for this source
-          const fallbackResponse = await fetch(`https://api.factmaven.com/xml-to-json/?xml=${source.url}`);
-          const fallbackData = await fallbackResponse.json();
-          const items = fallbackData.rss?.channel?.item || fallbackData.feed?.entry || [];
-          const normalizedItems = (Array.isArray(items) ? items : [items]).filter(item => item && (item.title || item.description));
-          
-          if (normalizedItems.length > 0) {
-            setLatestNews(normalizedItems.slice(0, 3).map((item: any) => {
-              // Extract thumbnail from various possible fields
-              const thumbnail = 
-                item['media:content']?.['@attributes']?.url || 
-                item.enclosure?.['@attributes']?.url || 
-                item.thumbnail || 
-                item.image || 
-                '';
-                
-              return {
-                title: item.title || '',
-                link: item.link || '',
-                pubDate: item.pubDate || item.published || new Date().toISOString(),
-                thumbnail,
-                sourceLabel: source.label
-              };
-            }));
-            setLoadingNews(false);
-            return;
-          }
-
-          // Third Fallback: AllOrigins + DOMParser
-          try {
-            const allOriginsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
-            const aoResponse = await fetch(allOriginsUrl);
-            const aoData = await aoResponse.json();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(aoData.contents, "text/xml");
-            const items = xmlDoc.querySelectorAll("item, entry");
-            
-            if (items.length > 0) {
-              const parsedItems = Array.from(items).slice(0, 3).map(item => {
-                const title = item.querySelector("title")?.textContent || '';
-                const link = item.querySelector("link")?.textContent || item.querySelector("link")?.getAttribute("href") || '';
-                const pubDate = item.querySelector("pubDate, published, updated")?.textContent || new Date().toISOString();
-                const description = item.querySelector("description, summary")?.textContent || '';
-                
-                return {
-                  title,
-                  link,
-                  pubDate,
-                  description,
-                  sourceLabel: source.label
-                };
-              });
-
-              if (parsedItems.length > 0) {
-                setLatestNews(parsedItems);
-                setLoadingNews(false);
-                return;
-              }
-            }
-          } catch (aoErr) {
-            console.warn(`AllOrigins fallback failed for ${source.label}`);
-          }
-
-          // Fourth Fallback: CodeTabs Proxy + DOMParser
-          try {
-            const codeTabsUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(source.url)}`;
-            const ctResponse = await fetch(codeTabsUrl);
-            const ctText = await ctResponse.text();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(ctText, "text/xml");
-            const items = xmlDoc.querySelectorAll("item, entry");
-            
-            if (items.length > 0) {
-              const parsedItems = Array.from(items).slice(0, 3).map(item => {
-                const title = item.querySelector("title")?.textContent || '';
-                const link = item.querySelector("link")?.textContent || item.querySelector("link")?.getAttribute("href") || '';
-                const pubDate = item.querySelector("pubDate, published, updated")?.textContent || new Date().toISOString();
-                
-                return {
-                  title,
-                  link,
-                  pubDate,
-                  sourceLabel: source.label
-                };
-              });
-
-              if (parsedItems.length > 0) {
-                setLatestNews(parsedItems);
-                setLoadingNews(false);
-                return;
-              }
-            }
-          } catch (ctErr) {
-            console.warn(`CodeTabs fallback failed for ${source.label}`);
-          }
-
-          // Fifth Fallback: AllOrigins (JSON) + Manual Parsing
-          try {
-            const allOriginsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
-            const aoResponse = await fetch(allOriginsUrl);
-            const aoData = await aoResponse.json();
-            const contents = aoData.contents;
-            
-            // Very basic regex-based XML parsing as a last resort
-            const items = contents.match(/<item>([\s\S]*?)<\/item>/g) || contents.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
-            
-            if (items.length > 0) {
-              const parsedItems = items.slice(0, 3).map((item: string) => {
-                const titleMatch = item.match(/<title>(.*?)<\/title>/);
-                const linkMatch = item.match(/<link>(.*?)<\/link>/) || item.match(/<link href="(.*?)"/);
-                const pubDateMatch = item.match(/<(pubDate|published|updated)>(.*?)<\/\1>/);
-                
-                return {
-                  title: titleMatch ? titleMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : 'Haber',
-                  link: linkMatch ? linkMatch[1] : '',
-                  pubDate: pubDateMatch ? pubDateMatch[2] : new Date().toISOString(),
-                  sourceLabel: source.label
-                };
-              });
-
-              if (parsedItems.length > 0) {
-                setLatestNews(parsedItems);
-                setLoadingNews(false);
-                return;
-              }
-            }
-          } catch (aoJsonErr) {
-            console.warn(`AllOrigins JSON fallback failed for ${source.label}`);
-          }
-
-          // Sixth Fallback: CORSProxy.io + DOMParser
-          try {
-            const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(source.url)}`;
-            const cpResponse = await fetch(corsProxyUrl);
-            const cpText = await cpResponse.text();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(cpText, "text/xml");
-            const items = xmlDoc.querySelectorAll("item, entry");
-            
-            if (items.length > 0) {
-              const parsedItems = Array.from(items).slice(0, 3).map(item => {
-                const title = item.querySelector("title")?.textContent || '';
-                const link = item.querySelector("link")?.textContent || item.querySelector("link")?.getAttribute("href") || '';
-                const pubDate = item.querySelector("pubDate, published, updated")?.textContent || new Date().toISOString();
-                
-                return {
-                  title,
-                  link,
-                  pubDate,
-                  sourceLabel: source.label
-                };
-              });
-
-              if (parsedItems.length > 0) {
-                setLatestNews(parsedItems);
-                setLoadingNews(false);
-                return;
-              }
-            }
-          } catch (cpErr) {
-            console.warn(`CORSProxy fallback failed for ${source.label}`);
-          }
-
-          // Seventh Fallback: Direct Fetch (CORS permitting)
-          try {
-            const response = await fetch(source.url);
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(text, "text/xml");
-            const items = xmlDoc.querySelectorAll("item, entry");
-            
-            if (items.length > 0) {
-              const parsedItems = Array.from(items).slice(0, 3).map(item => {
-                const title = item.querySelector("title")?.textContent || '';
-                const link = item.querySelector("link")?.textContent || item.querySelector("link")?.getAttribute("href") || '';
-                const pubDate = item.querySelector("pubDate, published, updated")?.textContent || new Date().toISOString();
-                
-                return {
-                  title,
-                  link,
-                  pubDate,
-                  sourceLabel: source.label
-                };
-              });
-
-              if (parsedItems.length > 0) {
-                setLatestNews(parsedItems);
-                setLoadingNews(false);
-                return;
-              }
-            }
-          } catch (directErr) {
-            console.warn(`Direct fetch failed for ${source.label}`);
-          }
-        } catch (err) {
-          console.warn(`Failed to fetch from ${source.label}, trying next...`);
+  useEffect(() => {
+    const fetchWeather = async (lat: number, lon: number, cityName: string) => {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const data = await res.json();
+        if (data && data.current_weather) {
+          setWeather({
+            temp: Math.round(data.current_weather.temperature),
+            city: cityName
+          });
         }
+      } catch (error) {
+        console.warn('Weather fetch error:', error);
       }
-    } catch (err) {
-      console.error('General news fetch error:', err);
-    } finally {
-      setLoadingNews(false);
-    }
-    
-    // If we reached here, it means all sources failed
-    setLatestNews([]);
-  };
+    };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
+    if (selectedCityId === 'current') {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=tr`);
+            const data = await res.json();
+            if (data && data.address) {
+              const name = data.address.city || data.address.town || data.address.province || 'Güncel Konum';
+              setCurrentLocationName(name);
+              fetchWeather(lat, lon, name);
+            } else {
+              fetchWeather(lat, lon, 'Güncel Konum');
+            }
+          } catch (e) {
+            console.warn("Reverse geocoding failed", e);
+            fetchWeather(lat, lon, 'Güncel Konum');
+          }
+        },
+        () => {
+          if (cities.length > 0) {
+            fetchWeather(cities[0].lat, cities[0].lon, cities[0].name);
+          } else {
+            fetchWeather(39.9208, 32.8541, 'Ankara'); // Default Ankara
+          }
+        }
+      );
+    } else {
+      const city = cities.find(c => c.id === selectedCityId);
+      if (city) {
+        fetchWeather(city.lat, city.lon, city.name);
       }
     }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100
-      }
-    }
-  };
+  }, [selectedCityId, cities]);
 
   return (
     <motion.div 
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="space-y-6 pb-24"
+      className="space-y-6 pt-4 md:pt-8"
     >
-      {/* Welcome Card */}
+      {/* iOS Style Header Title (Large) */}
+      <motion.div variants={itemVariants} className="px-2">
+        <p className="text-[13px] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-widest mb-1">
+          {currentTime.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </p>
+        <h2 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+          Hoş Geldiniz
+        </h2>
+      </motion.div>
+
+      {/* Hero Bento Card */}
       <motion.div 
         variants={itemVariants}
-        className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-500/20 text-white"
+        className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-8 rounded-[32px] border border-blue-100 dark:border-blue-500/20 shadow-2xl shadow-blue-500/10"
       >
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center gap-2 mb-3"
-            >
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-100">Güvenlik Operasyonları</span>
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">Hoş Geldiniz</h2>
-            <p className="text-blue-100 text-lg opacity-90 max-w-md leading-relaxed">Tüm güvenlik operasyonlarını tek bir akıllı merkezden yönetin.</p>
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-gradient-to-tr from-emerald-400/20 to-teal-400/20 blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex justify-between items-start mb-10">
+          <div className="flex items-center gap-2 bg-white/50 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 dark:border-white/10">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+            <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em]">Sistem Aktif</span>
           </div>
-          
-          <div className="flex flex-col items-end">
-            <div className="text-5xl font-mono font-black tracking-tighter mb-1">
-              {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </div>
-            <div className="text-blue-100 font-bold opacity-80 text-sm uppercase tracking-widest">
-              {currentTime.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </div>
+          <div className="text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 drop-shadow-sm">
+            {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
         
-        {/* Decorative Elements */}
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-400/20 rounded-full blur-[80px]" />
+        <div className="relative z-10 grid grid-cols-2 gap-4">
+          <div className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl shadow-lg shadow-blue-500/30 transform hover:scale-[1.02] transition-transform">
+            <Users className="text-white mb-3 opacity-80" size={32} />
+            <p className="text-4xl font-black text-white tracking-tighter">{personnel.length}</p>
+            <p className="text-[12px] font-bold text-blue-100 uppercase tracking-wider mt-1">Personel</p>
+          </div>
+          <div className="p-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl shadow-lg shadow-emerald-500/30 transform hover:scale-[1.02] transition-transform">
+            <UserCheck className="text-white mb-3 opacity-80" size={32} />
+            <p className="text-4xl font-black text-white tracking-tighter">{visitors.length}</p>
+            <p className="text-[12px] font-bold text-emerald-100 uppercase tracking-wider mt-1">Ziyaretçi</p>
+          </div>
+        </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* News Widget */}
-        <motion.div 
-          variants={itemVariants}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors"
-        >
-          <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
-            <h3 className="font-black text-gray-800 dark:text-white flex items-center gap-3 text-lg uppercase tracking-tight">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-xl">
-                <Newspaper size={20} className="text-red-500" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Grid Bento Cards */}
+          <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+            <Link to="/weather" className="relative overflow-hidden p-6 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 rounded-[32px] border border-sky-100 dark:border-sky-500/20 shadow-md hover:shadow-lg active:scale-95 transition-all flex flex-col justify-between h-40 group">
+              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-sky-400/20 blur-2xl group-hover:bg-sky-400/30 transition-colors" />
+              <div className="w-12 h-12 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30">
+                <Cloud size={24} />
               </div>
-              Son Haberler
-            </h3>
-            <button 
-              onClick={fetchLatestNews}
-              className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all ${loadingNews ? 'animate-spin' : ''}`}
-            >
-              <RefreshCw size={20} className="text-gray-400" />
-            </button>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
-            <AnimatePresence mode="wait">
-              {loadingNews ? (
-                <motion.div 
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="p-12 text-center"
-                >
-                  <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Haberler yükleniyor...</p>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="content"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="divide-y divide-gray-100 dark:divide-gray-700"
-                >
-                  {latestNews.length > 0 ? (
-                    latestNews.map((newsItem, i) => (
-                      <Link 
-                        key={i} 
-                        to="/news" 
-                        className="p-5 flex gap-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group relative overflow-hidden"
-                      >
-                        <div className="flex-1 min-w-0 relative z-10">
-                          <p className="text-base font-bold text-gray-800 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
-                            {newsItem.title}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-gray-400 font-bold">
-                            <div className="flex items-center gap-1">
-                              <Clock size={14} /> 
-                              {new Date(newsItem.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                            <span className="w-1 h-1 rounded-full bg-gray-300" />
-                            <span className="uppercase tracking-wider">{newsItem.sourceLabel || 'Haber'}</span>
-                          </div>
-                        </div>
-                        {newsItem.thumbnail && (
-                          <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border-2 border-white dark:border-gray-700 relative z-10">
-                            <img 
-                              src={newsItem.thumbnail} 
-                              alt="" 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                              referrerPolicy="no-referrer" 
-                            />
-                          </div>
-                        )}
-                        <div className="absolute right-0 top-0 bottom-0 w-1 bg-blue-600 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="p-12 text-center text-gray-400">
-                      <p className="text-sm font-bold uppercase tracking-widest">Haber bulunamadı.</p>
-                      <button 
-                        onClick={fetchLatestNews}
-                        className="mt-4 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest hover:underline"
-                      >
-                        Tekrar Dene
-                      </button>
+              <div className="relative z-10">
+                <p className="font-bold text-[16px] text-sky-900 dark:text-sky-100">Hava Durumu</p>
+                <p className="text-[13px] font-medium text-sky-600 dark:text-sky-400 mt-0.5">
+                  {weather ? `${weather.temp}°C • ${weather.city}` : 'Yükleniyor...'}
+                </p>
+              </div>
+            </Link>
+            <Link to="/reports" className="relative overflow-hidden p-6 bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 rounded-[32px] border border-purple-100 dark:border-purple-500/20 shadow-md hover:shadow-lg active:scale-95 transition-all flex flex-col justify-between h-40 group">
+              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-purple-400/20 blur-2xl group-hover:bg-purple-400/30 transition-colors" />
+              <div className="w-12 h-12 bg-purple-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <BarChart2 size={24} />
+              </div>
+              <div className="relative z-10">
+                <p className="font-bold text-[16px] text-purple-900 dark:text-purple-100">Raporlar</p>
+                <p className="text-[13px] font-medium text-purple-600 dark:text-purple-400 mt-0.5">Haftalık özet hazır</p>
+              </div>
+            </Link>
+          </motion.div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Main Navigation List (iOS Style) */}
+          <motion.div variants={itemVariants} className="space-y-3">
+            <h3 className="px-2 text-[13px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Yönetim</h3>
+            <div className="ios-list">
+              {modules.map((mod, i) => {
+                const Icon = mod.icon;
+                return (
+                  <Link 
+                    key={mod.path} 
+                    to={mod.path}
+                    className={`ios-list-item ${i !== modules.length - 1 ? 'border-b border-black/5 dark:border-white/5' : ''}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${mod.color} text-white flex items-center justify-center shadow-lg ${mod.shadow}`}>
+                        <Icon size={20} />
+                      </div>
+                      <span className="font-bold text-[17px] text-black dark:text-white">{mod.label}</span>
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* Theme Toggle & Stats */}
-        <motion.div 
-          variants={itemVariants}
-          className="flex flex-col gap-6"
-        >
-          <button 
-            onClick={toggleDarkMode}
-            className="flex-1 flex flex-col justify-between p-6 bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 active:scale-95 transition-all group relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between w-full mb-8">
-              <div className={`p-4 rounded-[1.5rem] transition-all duration-700 shadow-lg ${darkMode ? 'bg-indigo-900/50 text-indigo-400 rotate-180 shadow-indigo-500/20' : 'bg-amber-100 text-amber-600 shadow-amber-500/20'}`}>
-                {darkMode ? <Moon size={28} /> : <Sun size={28} />}
-              </div>
-              <div className={`w-14 h-7 rounded-full relative transition-all duration-500 p-1 ${darkMode ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}>
-                <div 
-                  className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-500 ${darkMode ? 'translate-x-7' : 'translate-x-0'}`}
-                />
-              </div>
+                    <ChevronRight size={18} className="text-gray-300 dark:text-gray-600" />
+                  </Link>
+                );
+              })}
             </div>
-            <div className="text-left">
-              <p className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">{darkMode ? 'Gece Modu' : 'Gündüz Modu'}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-bold mt-1">Sistem görünümünü değiştir.</p>
-            </div>
-            <div className={`absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 ${darkMode ? 'bg-indigo-500' : 'bg-amber-500'}`} />
-          </button>
+          </motion.div>
 
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
-                <p className="text-2xl font-black text-blue-600 dark:text-blue-400">24°C</p>
-                <p className="text-[10px] uppercase tracking-widest font-black text-gray-400 mt-1">Hava</p>
+          {/* Quick Actions */}
+          <motion.div variants={itemVariants} className="ios-list shadow-md">
+            <Link to="/settings" className="ios-list-item w-full group">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-600 dark:to-gray-800 text-white shadow-lg shadow-gray-900/20 group-hover:scale-105 transition-transform">
+                  <Settings size={20} />
+                </div>
+                <span className="font-bold text-[16px]">Ayarlar</span>
               </div>
-              <div className="flex-1 text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
-                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">12</p>
-                <p className="text-[10px] uppercase tracking-widest font-black text-gray-400 mt-1">Personel</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Modules Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {modules.map((mod, i) => {
-          const Icon = mod.icon;
-          return (
-            <motion.div 
-              key={mod.path}
-              variants={itemVariants}
-            >
-              <Link
-                to={mod.path}
-                className="group relative flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-lg shadow-gray-100 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:-translate-y-2 transition-all active:scale-95 overflow-hidden"
-              >
-                {/* Background Glow */}
-                <div className={`absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-br ${mod.color} opacity-0 group-hover:opacity-20 blur-3xl transition-opacity duration-500`} />
-                
-                <motion.div 
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className={`w-20 h-20 bg-gradient-to-br ${mod.color} text-white rounded-[1.5rem] flex items-center justify-center mb-5 shadow-xl ${mod.shadow} transition-transform duration-300`}
-                >
-                  <Icon size={36} strokeWidth={2.5} />
-                </motion.div>
-                <span className="text-sm font-black text-gray-800 dark:text-gray-100 text-center uppercase tracking-[0.15em]">{mod.label}</span>
-                
-                {/* Hover Indicator */}
-                <div className={`absolute top-4 right-4 w-2 h-2 rounded-full bg-gradient-to-br ${mod.color} opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_8px_currentColor]`} />
-              </Link>
-            </motion.div>
-          );
-        })}
+              <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors" />
+            </Link>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
-}
-
-function formatTime(date: Date) {
-  return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
