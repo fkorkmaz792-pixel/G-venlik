@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Search, Trash2, LogOut, MessageCircle, DoorOpen, Edit2, CheckSquare, Square, ChevronRight, X } from 'lucide-react';
 import { useAppStore } from '../store';
 import { motion, AnimatePresence } from 'framer-motion';
+import { triggerHaptic } from '../capacitor';
 
 export default function Visitors() {
   const { visitors, addVisitor, updateVisitor, deleteVisitor } = useAppStore();
@@ -307,21 +308,21 @@ export default function Visitors() {
                   DÜZENLE
                 </button>
                 <button 
-                  onClick={() => setShareModal({ action: 'c_kapisi' })}
+                  onClick={() => { triggerHaptic(); setShareModal({ action: 'c_kapisi' }); }}
                   className="py-3 bg-blue-500 hover:bg-blue-600 text-white text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 shadow-lg shadow-blue-500/20"
                 >
                   <DoorOpen size={18} />
                   C KAPISI
                 </button>
                 <button 
-                  onClick={() => setShareModal({ action: 'giriş' })}
+                  onClick={() => { triggerHaptic(); setShareModal({ action: 'giriş' }); }}
                   className="py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 shadow-lg shadow-emerald-500/20"
                 >
                   <MessageCircle size={18} />
                   GİRİŞ
                 </button>
                 <button 
-                  onClick={() => setShareModal({ action: 'çıkış' })}
+                  onClick={() => { triggerHaptic(); setShareModal({ action: 'çıkış' }); }}
                   className="py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 shadow-lg shadow-rose-500/20"
                 >
                   <LogOut size={18} />

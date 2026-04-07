@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Home, Users, UserCheck, Settings, BarChart2, Moon, Sun, Plus, ShieldAlert, Search, Maximize, Minimize, Columns } from 'lucide-react';
 import { auth } from '../firebase';
+import { triggerHaptic } from '../capacitor';
 
 const baseMenuItems = [
   { path: '/', label: 'Ana Sayfa', icon: Home },
@@ -188,6 +189,7 @@ export default function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => triggerHaptic()}
                   className={`flex flex-col items-center justify-center gap-1 h-full transition-all px-2 ${
                     isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}

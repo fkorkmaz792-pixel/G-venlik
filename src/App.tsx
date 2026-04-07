@@ -13,10 +13,15 @@ import AdminPanel from './pages/AdminPanel';
 import InstallPWA from './components/InstallPWA';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAppStore } from './store';
+import { initializeCapacitor } from './capacitor';
 
 export default function App() {
   const { personnel, visitors, seedData, syncFromFirebase } = useAppStore();
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    initializeCapacitor();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {

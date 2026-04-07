@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Search, Trash2, MessageCircle, Edit2, CheckSquare, Square, ChevronRight, LogOut, X } from 'lucide-react';
 import { useAppStore } from '../store';
 import { motion, AnimatePresence } from 'framer-motion';
+import { triggerHaptic } from '../capacitor';
 
 export default function Personnel() {
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel, personnelColumns } = useAppStore();
@@ -320,14 +321,14 @@ export default function Personnel() {
                   DÜZENLE
                 </button>
                 <button 
-                  onClick={() => handleBulkWhatsApp('giriş')}
+                  onClick={() => { triggerHaptic(); handleBulkWhatsApp('giriş'); }}
                   className="py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 shadow-lg shadow-emerald-500/20"
                 >
                   <MessageCircle size={18} />
                   GİRİŞ
                 </button>
                 <button 
-                  onClick={() => handleBulkWhatsApp('çıkış')}
+                  onClick={() => { triggerHaptic(); handleBulkWhatsApp('çıkış'); }}
                   className="py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 shadow-lg shadow-rose-500/20"
                 >
                   <LogOut size={18} />
